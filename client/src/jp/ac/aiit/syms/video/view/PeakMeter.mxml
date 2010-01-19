@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:local="com.betterthanflex.www.gauges.*"
+	width="50" height="20" borderStyle="none" backgroundAlpha="1.0">
+	<local:LightGauge 
+		id="peakmeter"
+		shape="{LightGauge.STRAIGHT}"
+		direction="{LightGauge.HORIZONTAL}"
+		width="28"
+		height="6"
+		roundedCorners="false"
+		lightThickness="2.00"
+		borderThickness="0.00"
+		divisions="20"
+		borderStyle="none"
+		lightWidths="{[6,6]}"
+		/>
+<!--
+	<local:LightGauge 
+		id="peakmeter"
+		shape="{LightGauge.RADIAL}"
+		angleFrom="1.18"
+		angleTo="1.95"
+		lightThickness="8.00"
+		borderThickness="0.00"
+		divisions="15"
+		borderStyle="none"
+		scaleX="0.15"
+		scaleY="0.15"
+		x="-15"
+		y="-5"
+		/>
+-->
+</mx:Canvas>
+

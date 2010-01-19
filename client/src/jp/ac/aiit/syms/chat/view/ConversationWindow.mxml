@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+			width="100%" 
+			height="100%"
+			title="チャット"
+			layout="vertical" 
+			creationComplete="init();"
+			xmlns:custom="jp.ac.aiit.syms.chat.view.*"
+			>
+	<mx:Canvas id="chatCanvas" width="100%" height="100%" horizontalScrollPolicy="off"
+	  backgroundColor="#FFFFFF" borderStyle="solid" verticalScrollPolicy="on">
+		<custom:LinkTextArea 
+			id="historyDisplay"
+			borderStyle="none"  
+			backgroundAlpha="0" 
+			link="onLink(event)"
+			editable="false" 
+			selectable="false"
+			fontSize="13"
+			width="100%" height="100%" verticalScrollPolicy="off">
+		</custom:LinkTextArea>	
+   </mx:Canvas>		
+	<mx:ControlBar id="conversionControlBar">
+		<mx:VBox width="100%" verticalGap="0" id = "conversionVbox">
+			<mx:HBox width="100%">
+				
+			<mx:TextInput width="100%" id="editor"
+						maxChars="300" color="{sendColorPicker.selectedColor}"
+						/>
+			<mx:ColorPicker  id="sendColorPicker" 
+				swatchPanelStyleName="colorPickerSwatchStyle"
+				toolTip="文字色選択"
+				dataProvider="{simpleDP}"
+			/>
+
+			<mx:Image id="colorPikerImage" source="@Embed(source='/asserts/multicolor.png')"
+				width="20" height="20" 
+				click="openPicker(event)" buttonMode="true"
+				horizontalCenter="0" verticalCenter="-150" 
+				toolTip="文字色選択"/>
+
+			<mx:Button id="sendMessageButton" label="送信" click="sendIM()"
+				toolTip="メッセージ送信"/>
+			<mx:Image id="iconImage" source="@Embed(source='/asserts/smileicon.gif')" 
+						width="15" height="15" 
+						initialize="init();" 
+						visible="false"
+						toolTip="絵文字" 
+						buttonMode="true" />
+			</mx:HBox>
+			<mx:HBox width="100%">
+				<mx:CheckBox  label="メッセージ通知音を有効にする" selected="false" id="chkEnableSoundOnRecieveMessage"/>
+			</mx:HBox>
+		</mx:VBox>
+	</mx:ControlBar>
+
+	<mx:Script>
+		<![CDATA[
+			import mx.formatters.SwitchSymbolFormatter;
+			import mx.effects.Pause;
+			import mx.core.Application;
+			import mx.events.FlexEvent;
+			import mx.core.UIComponent;
+			import mx.managers.IFocusManagerComponent;
+			import jp.ac.aiit.syms.util.UiHelper;
+			import jp.ac.aiit.syms.room.model.User; 
+			import jp.ac.aiit.syms.config.Configuration;
+			import mx.utils.StringUtil;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			import mx.events.ListEvent;
+			import mx.controls.Image;
+
+			// colorPicker 色選択設定
+            [Bindable]
+            public var simpleDP:Array = [
+'0X7F7F7F', '0XFF0000', '0XFFFF00', '0X80FF00', '0X00FFFF', '0X0080FF', '0XFF0080', '0XFF00FF',
+'0X4A4A4A', '0X950000', '0X959500', '0X009500', '0X009595', '0X004A95', '0X95004A', '0X950095',
+'0X353535', '0X6A0000', '0X6A6A00', '0X006A00', '0X006A6A', '0X00356A', '0X6A0035', '0X6A006A',
+'0XFFFFFF', '0X000000', '0X7A4545', '0X7A457A', '0X45457A', '0X457A7A', '0X7A7A45', '0X7A4545'
+                ];
+                
+	    //----------------------------------
+		//  colorPicker
+	    //----------------------------------
+
+        	private function openPicker(event:MouseEvent):void {
+        		stage.frameRate = 120;
+//				var pickerpanel:* = PopUpManager.createPopUp(this, MXColorPicker, false);
+				var pickerpanel:* = new MXColorPicker();
+
+				pickerpanel.setColorRGB(sendColorPicker.selectedColor);
+				pickerpanel.title = "Select Color";
+
+				PopUpManager.addPopUp(pickerpanel, this, false);
+				PopUpManager.centerPopUp(pickerpanel);
+			}
+
+
+	    //----------------------------------
+		//  Properties
+	    //----------------------------------
+			public static const SEND_CONVERSATION:String = "send_conversation";
+			private static const ICONS_ADDRESS:String = Configuration.getRemoteSmilesURI("mixi");
+ 
+     		private var smilePopWindow:SmileIconPopupWindow = new SmileIconPopupWindow();
+ 			private var point:Point = new Point();
+ 
+    		public var smileWindowFlg:Boolean = false;
+    		
+	    	/**
+	         * サウンド用のアセットを埋め込んで変数に割り当てる
+	         */
+	        [Bindable]
+	        [Embed(source="asserts/sounds/sendMsg.mp3")]
+	        public var sendMsgSoundClass :Class;
+	    
+	    //----------------------------------
+		//  Private Methods
+	    //----------------------------------
+			
+			private function modifyDisplay(item:Object) :String {
+				return "[" + item.name + "]";
+			}
+			
+			private function sendIM():void {
+				var me:User;
+				me = UiHelper.getInstance().getCurrentUser();
+				me.color = sendColorPicker.selectedColor.toString();
+				dispatchEvent(new Event(SEND_CONVERSATION));
+			}
+			
+			
+			private function init():void {
+//				historyDisplay.height = historyDisplay.textHeight + 10;
+				editor.setFocus();
+				editor.editable = false;
+				iconImage.addEventListener(MouseEvent.CLICK, iconDisplayHandler);
+				point.x = 0;
+				point.y = 0;
+				point = iconImage.localToGlobal(point);
+
+			}
+	
+			private function iconDisplayHandler(evt:Event):void {
+				if(!smileWindowFlg) {
+					//顔文字のコード（PC）
+					smilePopWindow.codArray = UiHelper.getInstance().codArray;
+					//顔文字の画像
+					smilePopWindow.urlArray = UiHelper.getInstance().urlArray;
+					//顔文字の説明
+					smilePopWindow.remarkArray = UiHelper.getInstance().remarkArray;
+          			PopUpManager.addPopUp(smilePopWindow, this);
+          			smileWindowFlg = true;
+          			//popupwindowの位置
+          			smilePopWindow.x = point.x - 300;
+          			smilePopWindow.y = point.y - 310;
+          			smilePopWindow.isPopUp = false;
+				
+    			}
+			}
+			// textarea link url 追加
+			private function getUrlParseMessage(msg:String):String {
+//				var isLink:RegExp = /(((http|ftp|https):\/\/){1}([a-zA-Z0-9_-]+)(\.[a-zA-Z0-9_-]+)+([\S,:\/\.\?=a-zA-Z0-9_-]+))/igs;
+//				trace(msg);
+				var isLink:RegExp = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])/igs;
+				if(msg.match(isLink).length >= 1) {
+					var tmpMsg:String;
+					var addHttp:String;
+					for each(var match:String in msg.match(isLink)) {
+						match.search("www.")?(addHttp=""):(addHttp="http://"); 
+						tmpMsg = msg.replace(match,("<u><a href='event:"+ addHttp + match + "'>" + match + "</a></u>"));
+						msg = tmpMsg;						
+					}
+				}
+//				trace(msg);
+				return msg;
+			}
+			// textarea link　click
+			private function onLink( event : TextEvent ) : void {        
+  				navigateToURL(new URLRequest(event.text));
+			}
+		//----------------------------------
+		//  Public Methods
+	    //----------------------------------			
+			public function smileyHandler(codArray:Array, urlArray:Array, result:String):void
+			{
+				var smileyIndex:int = -1;
+				var searchIndex:int = -1;
+				var testSearchIndex:int = -1;
+				var testString:String;
+				var searchString:String;
+				var addUrlLinkResult:String = getUrlParseMessage(result);
+				if(result == null) {
+					 searchString = editor.htmlText;
+				} else  {
+					searchString = StringUtil.trim(addUrlLinkResult);
+				}
+				
+				for (var x:int = 0; x < codArray.length; x++)
+				{
+					testString = codArray[x].toString().replace(/(\)|\()|\?|\[|\]/, "\\$&");
+					searchIndex = searchString.search(testString);
+					if (searchIndex >= 0)
+					{
+			
+						if (testSearchIndex < 0)
+						{
+							testSearchIndex = searchIndex;
+							smileyIndex = x;
+						}
+						else
+						{
+							if (testSearchIndex > searchIndex)
+							{
+								testSearchIndex = searchIndex;
+								smileyIndex = x;
+							}
+						}
+					}
+				}
+				searchIndex = testSearchIndex;
+				var newText:String = "";
+				var oldText:String = historyDisplay.htmlText;
+				if (searchIndex < 0)
+				{
+					if(result == null) {
+						newText = editor.htmlText;
+					} else {
+						newText = StringUtil.trim(addUrlLinkResult);
+					}
+				}
+				
+				while (searchIndex >= 0)
+				{
+					var smileyReplaceString:String = '<FONT SIZE = "5" COLOR="#'
+						smileyReplaceString += chatCanvas.getStyle("backgroundColor").toString(16);
+						smileyReplaceString += '"> ';
+						smileyReplaceString += codArray[smileyIndex];
+						smileyReplaceString += '  </FONT>';
+					
+					historyDisplay.htmlText = oldText + newText + searchString.slice(0, searchIndex + 1);
+					
+					historyDisplay.validateNow();
+					
+					var numLines:int = historyDisplay.mx_internal::getTextField().numLines;
+					var smiley:Image = new Image();
+					smiley.source = ICONS_ADDRESS + urlArray[smileyIndex];
+					smiley.x = historyDisplay.getLineMetrics(numLines - 1).width;
+					smiley.y = historyDisplay.textHeight - historyDisplay.getLineMetrics(numLines - 1).height;
+					chatCanvas.addChild(smiley);
+					
+					newText += searchString.slice(0, searchIndex) + smileyReplaceString;
+					var codeLength:int = codArray[smileyIndex].toString().length;
+					searchString = searchString.slice(searchIndex + codeLength);
+					
+					searchIndex = -1;
+					testSearchIndex = -1;
+					smileyIndex = -1;
+					for (x = 0; x < codArray.length; x++)
+					{
+						testString = codArray[x].toString().replace(/(\)|\()|\?|\[|\]/, "\\$&");
+						searchIndex = searchString.search(testString);
+						if (searchIndex >= 0)
+						{
+			
+							if (testSearchIndex < 0)
+							{
+								testSearchIndex = searchIndex;
+								smileyIndex = x;
+							}
+							else
+							{
+								if (testSearchIndex > searchIndex)
+								{
+									testSearchIndex = searchIndex;
+									smileyIndex = x;
+								}
+							}
+						}
+					}
+					searchIndex = testSearchIndex;
+					if (searchIndex < 0)
+					{
+						newText += searchString;
+					}
+				}
+				
+				historyDisplay.htmlText = oldText + newText + "\n";
+
+
+				historyDisplay.validateNow();
+				historyDisplay.height = historyDisplay.textHeight + 10;
+//				editor.htmlText = "";
+				chatCanvas.validateNow();
+//				chatCanvas.verticalScrollPosition = chatCanvas.maxVerticalScrollPosition;
+
+				historyDisplay.callLater( _scrollPosition );
+			}
+			
+			private function _scrollPosition():void {
+				historyDisplay.verticalScrollPosition = historyDisplay.maxVerticalScrollPosition;
+				chatCanvas.verticalScrollPosition = chatCanvas.maxVerticalScrollPosition;
+			}
+
+		]]>
+	</mx:Script>
+</mx:Panel>	

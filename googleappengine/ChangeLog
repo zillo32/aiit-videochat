@@ -1,0 +1,7 @@
+0.0(07/31-08/01): ApplicationManager.java（red5）のスタブ，aiitchat.py（Google App Engine）のtime機能
+0.1(08/02-03): ログ保存，#log，#version，#help
+0.2(08/04): logメソッド，#tail，hello機能
+0.21(08/05): write及びwrite_mlメソッド，logの上下限，
+0.22(08/05):　last機能
+0.23(08/05）: 挨拶（最初と，1日以上の間があったとき）
+0.3: twitter機能

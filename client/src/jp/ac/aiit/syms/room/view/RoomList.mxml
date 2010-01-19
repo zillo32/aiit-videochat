@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" label="部屋一覧" width="100%" height="100%" 
+			xmlns:customers = "jp.ac.aiit.syms.room.model.*">
+
+<customers:CustomPanel layout="vertical"
+		  id="custpanel"
+		  width="100%" 
+		  height="100%"
+ 		   title="部屋一覧"
+ 		   titleBtnStyleName = "選択した部屋に入室">
+<mx:Accordion id="accordion" 
+			selectedIndex="2"
+            resizeToContent="true"
+            historyManagementEnabled="false"
+            width="100%" height="100%">
+ <mx:VBox label="コミュニティ" width="100%" height="100%" >
+	<mx:DataGrid id="chatRoomGrid" width="100%" height="100%" doubleClickEnabled="true" click="onClick('c')" doubleClick="walkInRoom()" >
+		<mx:columns>
+			<mx:DataGridColumn headerText="部屋番号" dataField="roomId" visible="false" sortable="true" />
+			<mx:DataGridColumn headerText="画像" resizable="true" width="55" sortable="false">
+				<mx:itemRenderer>
+			 		<mx:Component>
+			 			<mx:HBox verticalScrollPolicy="off"  horizontalScrollPolicy="off"  resizeEffect="Resize"  paddingLeft="2">
+			 				<mx:Script>
+			 					<![CDATA[
+			 						[Bindable]
+			 						[Embed(source="asserts/openrooms/openroom.gif")]
+			 						private var openroomIcon:Class;
+			 						
+			 						[Bindable]
+			 						[Embed(source="asserts/personalImg.jpeg")]
+			 						private var personalImg:Class;
+			 						
+									override public function set data(value:Object):void {
+										super.data = value;
+										if(data.roomIconUrl == "" && data.roomType == "1"){
+											roomIcon.source = openroomIcon;
+										} else if(data.roomIconUrl == "" && data.roomType == "2") {
+											roomIcon.source = personalImg;
+										}
+									}			 					
+			 					]]>
+			 				</mx:Script>
+			 				<mx:Image id="roomIcon" source="{data.roomIconUrl}"  resizeEffect="Resize" width="50" height="50"/>
+			 			</mx:HBox>
+			 		</mx:Component>
+			 	</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="部屋名" dataField="roomName" sortable="true">
+				<mx:itemRenderer>
+					<mx:Component>
+					<mx:HBox paddingLeft="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" >
+						<mx:Script>
+							<![CDATA[
+								import mx.containers.utilityClasses.ConstraintColumn;
+								import jp.ac.aiit.syms.config.Configuration;
+								import flash.net.navigateToURL;
+								
+								private var url:URLRequest;
+								private static const MIXI_COMMUNITY_URL :String = Configuration.getCommunityURL();
+								private function webCommunityHahdle():void {
+									var mixi_domain:String = MIXI_COMMUNITY_URL + "?id=" + data.roomId;
+									url = new URLRequest(mixi_domain);
+									navigateToURL(url);
+								}
+								
+								override public function set data(value:Object):void {
+									super.data = value;
+									
+								} 								
+							]]>
+						</mx:Script>		
+						<mx:LinkButton id="webCommunityPage" 
+									textDecoration="underline"
+									color="#0000FF"  
+									label="{data.roomName}" 
+									click="webCommunityHahdle()" />
+					</mx:HBox>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="参加人数" dataField="joinedMemberCount" width="55" id="joinedMemberCount"  sortable="true"/>
+			<mx:DataGridColumn headerText="部屋種類" dataField="roomType" visible="false"/>
+		</mx:columns>
+	</mx:DataGrid>
+</mx:VBox>
+<mx:Box label="マイミクシィ" width="100%" height="100%">
+		<mx:DataGrid id="chatRoomGrid_mymix" width="100%" height="100%" doubleClickEnabled="true" click="onClick('m')" doubleClick="walkInRoom()" >
+		<mx:columns>
+			<mx:DataGridColumn headerText="部屋番号" dataField="roomId" visible="false" sortable="true" />
+			<mx:DataGridColumn headerText="画像"  width="55"  sortable="false" >
+				<mx:itemRenderer>
+			 		<mx:Component>
+			 			<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" resizeEffect="Resize" paddingLeft="2">
+			 				<mx:Script>
+			 					<![CDATA[
+			
+			 						[Bindable]
+			 						[Embed(source="asserts/personalImg.jpeg")]
+			 						private var personalImg:Class;
+			 						
+									override public function set data(value:Object):void {
+										super.data = value;
+										if(data.roomIconUrl == "" && data.roomType == "2") {
+											roomIcon.source = personalImg;
+										}
+									}			 					
+			 					]]>
+			 				</mx:Script>
+			 				<mx:Image id="roomIcon" source="{data.roomIconUrl}" resizeEffect="Resize"  width="50" height="50"/>
+			 			</mx:HBox>
+			 		</mx:Component>
+			 	</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="部屋名" dataField="roomName" sortable="true">
+				<mx:itemRenderer>
+					<mx:Component>
+					<mx:HBox paddingLeft="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" >
+						<mx:Script>
+							<![CDATA[
+								import mx.containers.utilityClasses.ConstraintColumn;
+								import jp.ac.aiit.syms.config.Configuration;
+								import flash.net.navigateToURL;
+								
+								private var url:URLRequest;
+								private static const MIXI_FRIEND_URL :String = Configuration.getMixiFriendsURL();
+								private function webPageHahdle():void {
+									var mixi_domain:String = MIXI_FRIEND_URL + "?id=" + data.roomId.substr(1,data.roomId.length -1);
+									url = new URLRequest(mixi_domain);
+									navigateToURL(url);
+								}
+								
+								override public function set data(value:Object):void {
+									super.data = value;
+								} 								
+							]]>
+						</mx:Script>		
+						<mx:LinkButton id="webPage" 
+									textDecoration="underline"
+									color="#0000FF"  
+									label="{data.roomName}" 
+									click="webPageHahdle()" />
+					</mx:HBox>
+					</mx:Component>
+				</mx:itemRenderer>
+			
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="参加人数" id="joinedMyMixiMemberCount"  dataField="joinedMemberCount" width="55" sortable="true"/>
+			<mx:DataGridColumn headerText="部屋種類" dataField="roomType" visible="false" sortable="false"/>
+		</mx:columns>
+	</mx:DataGrid>
+</mx:Box>
+<mx:Box label="オープンルーム" width="100%" height="100%">
+		<mx:DataGrid id="chatRoomGrid_open" width="100%" height="100%" doubleClickEnabled="true" click="onClick('o')" doubleClick="walkInRoom()" >
+		<mx:columns>
+			<mx:DataGridColumn headerText="部屋番号" dataField="roomId" visible="false" sortable="true" />
+			<mx:DataGridColumn headerText="画像"   width="55" sortable="false">
+				<mx:itemRenderer>
+			 		<mx:Component>
+			 			<mx:HBox  verticalScrollPolicy="off" horizontalScrollPolicy="off"  resizeEffect="Resize" paddingLeft="2">
+			 				<mx:Script>
+			 					<![CDATA[
+			 						[Bindable]
+			 						[Embed(source="asserts/openrooms/openroom.gif")]
+			 						private var openroomIcon:Class;
+
+			 						[Bindable]
+			 						[Embed(source="asserts/openrooms/openroom2.jpeg")]
+			 						private var openroomIcon2:Class;
+
+			 						[Bindable]
+			 						[Embed(source="asserts/openrooms/openroom3.jpeg")]
+			 						private var openroomIcon3:Class;
+
+			 						[Bindable]
+			 						[Embed(source="asserts/openrooms/WS000030.png")]
+			 						private var openroomIcon4:Class;
+
+									override public function set data(value:Object):void {
+										super.data = value;
+										if(data.roomIconUrl == "" && data.roomType == "3" 
+											&& data.roomId == "o999999990"){
+											roomIcon.source = openroomIcon;
+										}
+										if(data.roomIconUrl == "" && data.roomType == "3" 
+											&& data.roomId == "o999999991"){
+											roomIcon.source = openroomIcon2;
+										}
+										if(data.roomIconUrl == "" && data.roomType == "3" 
+											&& data.roomId == "o999999992"){
+											roomIcon.source = openroomIcon3;
+										}
+										if(data.roomIconUrl == "" && data.roomType == "3" 
+											&& data.roomId == "o999999993"){
+											roomIcon.source = openroomIcon4;
+										}
+									}			 					
+			 					]]>
+			 				</mx:Script>
+			 				<mx:Image id="roomIcon" source="{data.roomIconUrl}" resizeEffect="Resize" width="50" height="50"/>
+			 			</mx:HBox>
+			 		</mx:Component>
+			 	</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="部屋名" dataField="roomName" sortable="true"/>
+			<mx:DataGridColumn headerText="参加人数" dataField="joinedMemberCount" id="joinedOpenMemberCount"  width="55" sortable="true" />
+			<mx:DataGridColumn headerText="部屋種類" dataField="roomType" visible="false"/>
+		</mx:columns>
+	</mx:DataGrid>
+</mx:Box>
+ </mx:Accordion>
+</customers:CustomPanel>
+
+<mx:Script>
+	<![CDATA[
+		import mx.core.Application;
+		
+		public static const WALK_IN_ROOM_BUTTON_CLICK:String = "walk_in_room_button_click";
+					
+		/**
+         * サウンド用のアセットを埋め込んで変数に割り当てる
+         */
+        [Bindable]
+        [Embed(source="asserts/sounds/applause.mp3")]
+        public var joinRommSoundClass :Class;
+        
+        [Bindable]
+        [Embed(source="asserts/sounds/leaveroom.mp3")]
+        public var leaveRommSoundClass :Class;
+
+		private function onClick(roomtype:String):void
+		{
+			switch (roomtype){
+				case 'c':
+					chatRoomGrid_mymix.selectedIndex = -1;
+					chatRoomGrid_open.selectedIndex = -1;
+					break;
+
+				case 'm':
+					chatRoomGrid.selectedIndex = -1;
+					chatRoomGrid_open.selectedIndex = -1;
+					break;
+				
+				case 'o':
+					chatRoomGrid.selectedIndex = -1;
+					chatRoomGrid_mymix.selectedIndex = -1;
+					break;
+				
+			}
+		}        
+		private function walkInRoom():void {
+			if(chatRoomGrid.selectedIndex != -1
+				|| chatRoomGrid_mymix.selectedIndex != -1
+				|| chatRoomGrid_open.selectedIndex != -1 ) {
+				dispatchEvent(new Event(WALK_IN_ROOM_BUTTON_CLICK));
+			} 
+		}
+
+	]]>
+</mx:Script>
+
+
+</mx:Canvas>

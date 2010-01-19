@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<custom:CustomPanel3 xmlns:mx="http://www.adobe.com/2006/mxml" 
+		  xmlns:view = "jp.ac.aiit.syms.room.view.*"
+		  xmlns:custom="jp.ac.aiit.syms.room.model.*"
+			layout="vertical" 
+			width="100%" 
+			height="100%" 
+			title="  部屋">
+			
+	<mx:TabBar id="roomTabBar" itemClick="clickTabEvt(event);">
+		<mx:dataProvider>
+			{roomInfo}
+		</mx:dataProvider>
+	</mx:TabBar>			
+		
+	<mx:ViewStack id="roomInfo" width="100%" height="100%" resizeToContent="true" creationPolicy="all" borderStyle="solid">
+		<view:RoomList id="roomlist"/>
+		<view:MemberList id="memberlist"/>		
+	</mx:ViewStack>
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			import mx.events.CloseEvent;
+			import mx.controls.Alert;
+			import mx.events.ItemClickEvent;
+			
+			public static const RETURN_TO_ROOMLIST:String = "return_to_roomlist";
+			public static const VIEW_MEMBERLIST:String = "view_memberlist";
+			
+			private static const SELECT_ROOM:Number = 0;
+			private static const SELECT_MEMBER:Number = 1;
+			
+			public var joinedRoomFlg:Boolean;
+			public var myAlert:Alert;
+			
+			//二重だログインしたチェックフラグ
+			public var repeatJoinFlg:Boolean = false;
+			
+			private function clickTabEvt(event:ItemClickEvent):void {
+				if(event.index == SELECT_ROOM && joinedRoomFlg == true) {
+					myAlert = Alert.show("退出しますか？","部屋一覧", 
+								Alert.YES|Alert.NO, 
+								null, 
+								alertHandler);
+					myAlert.width = 250;
+					myAlert.height = 120;
+								
+								
+				} else if(event.index == SELECT_MEMBER && joinedRoomFlg == false) {
+ 					if(Application.application.roomInfo.roomlist.chatRoomGrid.selectedIndex == -1
+ 					   	&& Application.application.roomInfo.roomlist.chatRoomGrid_mymix.selectedIndex == -1
+ 					   	&& Application.application.roomInfo.roomlist.chatRoomGrid_open.selectedIndex == -1)  {
+ 						Alert.show("部屋が選択されていません","部屋一覧", 
+								Alert.OK,
+								null,
+								alertHandler); 
+						} else {
+							dispatchEvent(new Event(VIEW_MEMBERLIST));
+						}
+								
+				}
+						
+
+			}
+			
+			private function alertHandler(event:CloseEvent):void {
+				if(event.detail == Alert.YES && joinedRoomFlg == true ) {
+					dispatchEvent(new Event(RETURN_TO_ROOMLIST));	
+					memberlist.customPanel2.btnChange("leaveroom");
+				}
+				
+				if(event.detail == Alert.OK && joinedRoomFlg == false ) {
+					roomTabBar.selectedIndex = SELECT_ROOM;		
+				}
+ 
+				if(event.detail == Alert.NO) {
+					roomTabBar.selectedIndex = SELECT_MEMBER;
+				}
+			}
+			
+		]]>
+	</mx:Script>
+	
+</custom:CustomPanel3>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<custom:CustomTitleWindow
+ 		xmlns:mx="http://www.adobe.com/2006/mxml" 
+ 		xmlns:custom="jp.ac.aiit.syms.video.model.*"
+		xmlns:customview="jp.ac.aiit.syms.video.view.*"
+		showCloseButton="true"
+		styleName="noPadding"
+		layout="vertical" 
+		width="160" 
+		height="140"
+		xmlns:view = "jp.ac.aiit.syms.video.view.VideoMediator"
+		creationComplete="init()"
+		close="titleWindow_close(event);"
+		x="{this.winX}"
+		y="{this.winY}"
+		extBar="{ new jp.ac.aiit.syms.video.model.SoundTitleBar() }"
+		extBar2="{ new jp.ac.aiit.syms.video.view.PeakMeter() }"
+		includeInLayout="true"
+
+  mouseOver="onMouseOver(event);"
+  mouseOut="onMouseOut(event);"  
+  mouseDown="onMouseDown(event);"
+
+		move="moveMe()"
+ 		borderSkin="jp.ac.aiit.syms.video.view.CustomPanelSkin"
+ 		borderThicknessLeft="2"
+ 		borderThicknessRight="2"
+		>
+	<mx:Script source="VideoSource.as"/>	
+	<mx:VideoDisplay width="100%" height="100%" id="videoContainer"/>
+</custom:CustomTitleWindow>

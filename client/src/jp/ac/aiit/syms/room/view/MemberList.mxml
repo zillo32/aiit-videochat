@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+			width="100%" 
+			height="100%"
+			label="参加者一覧"
+			xmlns:customers = "jp.ac.aiit.syms.room.model.*"
+			>
+
+<customers:CustomPanel2
+	        id="customPanel2"
+		 	layout="vertical" 
+			width="100%" 
+			height="100%"
+			title="参加者一覧"
+			titleBtnStyleName = "入出室">
+	<mx:DataGrid width="100%" height="100%" id="memberDatagrid" itemClick="itemHandle(event)" 
+				selectionColor="#ffffff"   rollOverColor="#ffffff" >
+		<mx:columns>
+			<mx:DataGridColumn headerText="番号" dataField="id" visible="false"/>
+			<mx:DataGridColumn headerText="画像"   width="38"  sortable="false">
+			 <mx:itemRenderer>
+			 	<mx:Component>
+			 		<mx:HBox paddingLeft="2" horizontalScrollPolicy="off" verticalScrollPolicy="off"   >
+			 		<mx:Script>
+			 			<![CDATA[
+			 				[Bindable]
+			 				[Embed(source="asserts/personalImg.jpeg")]
+			 				private var personalImg:Class;
+			 				
+			 				override public function set data(value:Object):void {
+										super.data = value;
+										if(data.userIconUrl == ""){
+											personalIcon.source = personalImg;
+										}
+									}	
+			 			]]>
+			 		</mx:Script>
+			 		<mx:Image id = "personalIcon" source="{data.userIconUrl}" resizeEffect="Resize"
+ width="32" height="32"/>
+			 	</mx:HBox>
+			 	</mx:Component>
+			 </mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="ユーザ" dataField="nickName" width="65"   sortable="true">
+				<mx:itemRenderer>
+					<mx:Component>
+					<mx:HBox paddingLeft="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" >
+						<mx:Script>
+							<![CDATA[
+								import mx.containers.utilityClasses.ConstraintColumn;
+								import jp.ac.aiit.syms.config.Configuration;
+								import flash.net.navigateToURL;
+								
+								private var url:URLRequest;
+								private static const MIXI_FRIEND_URL :String = Configuration.getMixiFriendsURL();
+								private function webPageHahdle():void {
+									var mixi_domain:String = MIXI_FRIEND_URL + "?id=" + data.id.substr(1,data.id.length -1);
+									url = new URLRequest(mixi_domain);
+									navigateToURL(url);
+								}
+								
+								override public function set data(value:Object):void {
+									super.data = value;
+									
+								} 								
+							]]>
+						</mx:Script>		
+						<mx:LinkButton id="webPage" 
+									textDecoration="underline"
+									color="#0000FF"  
+									label="{data.nickName}" 
+									click="webPageHahdle()" />
+					</mx:HBox>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="入室日時" dataField="joinedTime" id="joinedTimeid"  width="70" sortable="false" />
+			<mx:DataGridColumn headerText="ビデオ" id="hasCameraid" width="35"  sortable="false">
+				<mx:itemRenderer>
+				<mx:Component>
+				<mx:HBox paddingLeft="2" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+					<mx:Script>
+						<![CDATA[
+							import flash.utils.getDefinitionByName;
+							import mx.core.Application;
+
+							[Bindable]
+							[Embed(source="asserts/Gnome-Camera-Web-32.png")]
+							public var cameraClass1:Class;
+							
+//							[Bindable]
+//							[Embed(source="asserts/no_posticon.gif")]
+//							public var cameraClass0:Class;
+							
+							private function videoSelect():void {
+								Application.application.roomInfo.memberlist.selectedItem = "video";
+							}
+							override public function set data( value:Object ) : void {
+								super.data = value;
+								if(!data.hasCamera) {
+									videoImage.source = "";
+								} else {
+									videoImage.source = cameraClass1;
+									videoImage.toolTip = "クリックでビデオを表示";
+								}
+							}
+						]]>
+					</mx:Script>
+	 				<mx:Image  id="videoImage" source="{cameraClass1}"  resizeEffect="Resize"
+width="35" height="35" 
+	 						scaleContent="true" 
+	 						horizontalAlign="center" click="videoSelect()" buttonMode="true" useHandCursor="true">
+	 				</mx:Image>	
+	 			</mx:HBox>
+	 			</mx:Component>
+	 		</mx:itemRenderer>	
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="部屋" dataField="room" visible="false"/>
+			<mx:DataGridColumn headerText="拒否" dataField="camDenyFlg" visible="false" />
+		</mx:columns>
+	</mx:DataGrid>
+</customers:CustomPanel2>
+<mx:Script>
+	<![CDATA[
+		import mx.controls.Alert;
+		import mx.core.Application;
+		import mx.collections.ArrayCollection;
+		import jp.ac.aiit.syms.room.model.ChatRoom;
+		
+		public var currentRoom:ChatRoom;
+		public var selectedItem:String;
+		
+		public static const SELECT_VIDEO_DISPLAY:String = "select_video_display";
+		public static const LEAVE_CURRENT_ROOM:String = "leave_current_room";
+		public static const WALK_IN_ROOM_BUTTON_CLICK:String = "walk_in_room_button_click";
+		
+		private function videoDisplay():void {
+			if(Application.application.roomInfo.joinedRoomFlg) {
+				
+				dispatchEvent(new Event(SELECT_VIDEO_DISPLAY));
+			} else {
+//				customPanel2.btnChange("walkin");
+				if(!Application.application.roomInfo.repeatJoinFlg) {
+					customPanel2.btnChange("walkin");
+					dispatchEvent(new Event(WALK_IN_ROOM_BUTTON_CLICK));
+				} else {
+					Alert.show( '同一ユーザーが既に入室しているためログインできません。', '参加者一覧' );
+				}
+			}
+		}
+		
+		private function itemHandle(event:Event):void {
+			if(selectedItem == "video" ) {
+				videoDisplay();
+			}
+			selectedItem = "";
+		}
+	]]>
+</mx:Script>
+	
+</mx:Canvas>

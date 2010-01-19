@@ -1,0 +1,96 @@
+/* CSS file */
+Application {
+   backgroundColor: #d8f8eb;
+   backgroundGradientColors: #d2eaca, #d2eaca;
+   themeColor: #27347c;
+   color: #133f49;
+   
+}
+
+Panel {
+   borderColor: #F1DEB4;
+   headerColors: #ffdbb6, #fece9c;
+   footerColors: #ffdbb6, #fece9c;
+   headerHeight: 25;
+   borderThicknessLeft: 10;
+   borderThicknessTop: 0;
+   borderThicknessBottom: 10;
+   borderThicknessRight: 10;
+}
+
+Alert {
+	color: #000000;
+	title-style-name : 'alertTitle';
+	background-color: #ffe4c7;
+	border-color: #ffe4c7;
+}
+
+.alertTitle{
+	font-weight :bold;
+}
+DataGrid {
+   selectionColor:  #d2eaca;
+   rollOverColor: #ffdbb6;
+}
+
+VSlider {
+   borderColor: #990000;
+   themeColor: #990000;
+   labelStyleName: "myvSliderLabelStyle";
+}
+
+.myvSliderLabelStyle {
+   color: #990000;
+}
+
+.customPopUp {   
+            header-height:2;   
+            padding-left:0;   
+            padding-right:0;   
+            padding-top:4;   
+            padding-bottom:4;   
+            border-color:#EDF4C5;   
+            border-alpha:.3;   
+            border-thickness-left:0;   
+            border-thickness-right:0;   
+            border-thickness-bottom:4;   
+            border-thickness-top:4;   
+            background-color:#f8f8f2;
+            color:#ffffff;  
+        }   
+.noPadding {
+            paddingBottom: 0;
+            paddingTop: 0;
+            paddingLeft: 0;
+            paddingRight: 0;
+			borderThicknessLeft: 0;
+			borderThicknessTop: 0;
+			borderThicknessBottom: 2;
+			borderThicknessRight: 0;
+			headerHeight: 20;
+		    headerColors: #ffdbb6, #f8f2be;
+		    shadowDirection: right;
+		    dropShadowColor: #000000;
+        }
+        
+HDividedBox {
+   dividerAffordance: 1;
+   dividerAlpha: 0;
+   dividerThickness: 1;
+}
+VDividedBox {
+   dividerAffordance: 1;
+   dividerAlpha: 0;
+   dividerThickness: 1;
+}        
+
+AccordionHeader {
+   fillColors: #ffffff, #a69b4a, #ffffff, #eeeeee;
+   selectedFillColors: #ffffff, #cdff00;
+}
+
+.colorPickerSwatchStyle {
+            swatch-width:18;
+            swatch-height:18;
+			column-count:8;            
+        }    

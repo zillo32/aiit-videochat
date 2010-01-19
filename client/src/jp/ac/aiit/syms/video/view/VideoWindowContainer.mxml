@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel
+		xmlns:mx="http://www.adobe.com/2006/mxml"
+		width="100%" 
+		height="100%"
+		title="★ News♪ ★"
+		xmlns:video="jp.ac.aiit.syms.video.view.*"
+		xmlns:media="flash.media.*" 
+		creationComplete="init()"
+		resize="changeSize()"  
+		 xmlns:ns1="jp.ac.aiit.syms.chat.view.*">
+<mx:TextArea width="100%" height="100%" editable="false" horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+<mx:htmlText>
+<![CDATA[<h1><b>AIIT&nbsp;VideoChat&nbsp;&nbsp;0.6(2009/10/21)&nbsp;&nbsp;aka&nbsp;あるぱかちゃっと</b></h1>
+・サポートコミュニティ
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://mixi.jp/view_community.pl?id=4383682" target="_blank"><u><font color="#0000ff">http://mixi.jp/view_community.pl?id=4383682 </font></u></a>
+・ポータルサイト
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://pk.aiit.ac.jp/avc/" target="_blank"><u><font color="#0000ff">http://pk.aiit.ac.jp/avc/</font></u></a>
+・当バージョン(0.6)はまだちょっぴり動作が怪しいかもしれません（すみません）。
+・次のバージョン0.7は2009/10/31頃のリリースになりました（遅くなってごめんなさい）。
+・開発者募集中
+]]>
+		</mx:htmlText>
+	</mx:TextArea>
+
+<media:Video width="320" height="240" id="currentVideo" /> 
+<mx:Script>
+	<![CDATA[
+		
+		public var selfVideoWindow:VideoWindow;
+		public static const CHANGE_VIDEO_CONTAINER_SIZE:String = "change_video_container_SIZE";
+		
+		private function init():void {
+
+		}
+		
+		private function changeSize():void {
+				dispatchEvent(new Event(CHANGE_VIDEO_CONTAINER_SIZE));
+		}
+	]]>
+</mx:Script>
+</mx:Panel>
