@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow 
+		xmlns:mx="http://www.adobe.com/2006/mxml" 
+		layout="vertical" 
+		width="23" 
+		height="80"
+		x="{this.sliderX}"
+		y="{this.sliderY}"
+		styleName="customPopUp"  
+    	borderSkin="jp.ac.aiit.syms.video.model.CustomPanelSkin"  
+    	initialize="initPopUp()"
+		>
+
+<mx:Script>
+	<![CDATA[
+	 	import mx.events.SliderEvent;
+        import mx.controls.sliderClasses.Slider;
+		
+		[Bindable]
+ 		public var sliderX:Number;
+  		[Bindable]		
+ 		public var sliderY:Number;
+ 		
+ 		[Bindable]
+ 		public var curVolume:Number;
+ 		public var videoParent:VideoWindow;
+ 		
+ 		public static const SOUND_SLIDER:String = "sound_slider";
+ 		private function initPopUp():void {   
+        	this.isPopUp = false; 
+        }
+           
+        private function sliderChange(event:SliderEvent):void {
+        	dispatchEvent(new Event(SOUND_SLIDER));
+        }
+	]]>
+</mx:Script>
+	<mx:VSlider id="slider"
+	  	liveDragging="true" 
+	  	tickInterval="50" 
+	  	minimum="0" 
+	  	maximum="100"
+	  	value="{this.curVolume}" 
+		width="20"
+		height="60"
+		rotation="360"
+		change="sliderChange(event);"/>
+</mx:TitleWindow>

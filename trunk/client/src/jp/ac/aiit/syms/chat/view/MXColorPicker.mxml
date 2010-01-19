@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+	
+	 xmlns="*" width="338" height="338"
+	 layout="absolute"
+	 statusStyleName="colorPickerStyle"
+	 horizontalAlign="center" verticalAlign="middle"
+	 showCloseButton="true" visible="true" close="cancelMe();" 
+	 creationComplete="initColorPicker();">
+
+
+	<mx:TextInput id="ValueHue" visible="false" focusOut="correctValue(event);" keyUp="validateValue(event);" />
+	<mx:TextInput id="ValueSaturation"  visible="false" focusOut="correctValue(event);" keyUp="validateValue(event);"/>
+	<mx:TextInput id="ValueBrightness" visible="false" focusOut="correctValue(event);" keyUp="validateValue(event);"/>
+	<mx:TextInput id="ValueRed" visible="false"  focusOut="correctValue(event);" keyUp="validateValue(event);"/>
+	<mx:TextInput id="ValueGreen" visible="false"  focusOut="correctValue(event);" keyUp="validateValue(event);"/>
+	<mx:TextInput id="ValueBlue" visible="false"  focusOut="correctValue(event);" keyUp="validateValue(event);"/>
+
+
+	<mx:HBox x="12" y="7" width="129" height="22" borderStyle="insert"  horizontalScrollPolicy="off"  verticalScrollPolicy="off" autoLayout="true">
+	    <mx:Image x="10" y="6" width="131" height="22" id="CanvasColor"  />
+	</mx:HBox>
+
+
+	<mx:TextInput x="149" y="7" width="67" id="ValueHex" height="23"/>
+
+	<mx:Button x="230" y="7" label="OK" width="74" id="ButtonOK" click="okMe();"/>
+
+	<mx:HBox x="10" y="35" width="260" height="260" borderStyle="inset" >
+		<mx:Image width="256" height="256" id="CanvasPicker" mouseMove="doPickerMove(event);" mouseDown="doPickerDown(event);" mouseUp="doPickerUp(event);"/>
+	</mx:HBox>
+
+	<mx:HBox x="279" y="35" width="30" height="260" borderStyle="inset">
+		<mx:Image width="36" height="256" id="CanvasHue" mouseMove="doHueMove(event);" mouseDown="doHueDown(event);" mouseUp="doHueUp(event);"/>
+	</mx:HBox>
+
+    <mx:Script>
+        <![CDATA[
+        	import mx.core.Application;
+	        	import mx.managers.PopUpManager;
+	        	import mx.graphics.BitmapFill;
+	        	import mx.controls.Image;
+	        	import mx.core.UIComponent;
+				import flash.display.*;
+
+				private var red:Number = 0;
+				private var green:Number = 0;
+				private var blue:Number = 0;
+
+				private var ored:Number = 0;
+				private var ogreen:Number = 0;
+				private var oblue:Number = 0;
+				
+				private var hue:Number = 0;
+				private var saturation:Number = 0;
+				private var lightness:Number = 0;
+				
+				private var colorArea:Sprite;
+				private var handleLeft:Sprite;
+				private var handleRight:Sprite;
+				private var handlePicker:Sprite;
+				private var colorPreview:Sprite;
+				
+				private var currentDragger:Sprite;
+
+		        private function okMe():void {
+		            PopUpManager.removePopUp(this);
+		            Application.application.conversation.sendColorPicker.selectedColor = this.getColorRGB();
+		        }
+
+		        private function cancelMe():void {
+		            PopUpManager.removePopUp(this);
+		        }
+				
+				private function updateImagePickerColor(): void {
+	            	var w:Number = CanvasPicker.width;
+	            	var h:Number = CanvasPicker.height;
+	            	var rgb:Array = HSB2RGB(hue, 1, 1);
+	            	colorArea.graphics.clear();
+					colorArea.graphics.beginFill(uint((Math.round(rgb[0]*255))<<16) | 
+												 uint((Math.round(rgb[1]*255))<<8) | 
+												 uint(Math.round(rgb[2]*255)));
+					colorArea.graphics.drawRect(0, 0, w, h);
+				}
+
+				private function updateColorPreview():void {
+	            	var w:Number = CanvasColor.width;
+	            	var h:Number = CanvasColor.height;
+					colorPreview.graphics.clear();
+	            	colorPreview.graphics.beginFill(uint((Math.round(red*255))<<16) | 
+												 uint((Math.round(green*255))<<8) | 
+												 uint(Math.round(blue*255)));
+	            	colorPreview.graphics.drawRect(0,0,w/2,h);
+//	            	colorPreview.graphics.drawRect(0,0,w,h/2);
+	            	colorPreview.graphics.beginFill(uint((Math.round(ored*255))<<16) | 
+												 uint((Math.round(ogreen*255))<<8) | 
+												 uint(Math.round(oblue*255)));
+	            	colorPreview.graphics.drawRect(w/2,0,w,h);
+				}
+
+				private function updateImagePickerHue():void {
+					handleRight.y = handleLeft.y = hue * 255;
+				}
+				
+				private function updateImagePicker():void {
+					handlePicker.x = saturation * 255;
+					handlePicker.y = 255 - (lightness * 255);
+				}
+				
+				private function updateRGBValues():void {
+					ValueRed.text = String(Math.round(red*255));
+					ValueGreen.text = String(Math.round(green*255));
+					ValueBlue.text = String(Math.round(blue*255));
+				}
+
+				private function updateHSLValues():void {
+					ValueHue.text = String(Math.round(hue*359));
+					ValueSaturation.text = String(Math.round(saturation*100));
+					ValueBrightness.text = String(Math.round(lightness*100));
+				}
+				
+				private function updateHexValue():void {
+					var h:String = "0123456789ABCDEF";
+					var s:String = 	h.charAt((uint(Math.round(red  *255))>>4)&0xF)+
+									h.charAt((uint(Math.round(red  *255))   )&0xF)+
+									h.charAt((uint(Math.round(green*255))>>4)&0xF)+
+									h.charAt((uint(Math.round(green*255))   )&0xF)+
+									h.charAt((uint(Math.round(blue *255))>>4)&0xF)+
+									h.charAt((uint(Math.round(blue *255))   )&0xF);
+					ValueHex.text = s;
+				}
+
+				private function HSB2RGB(H:Number, S:Number, B:Number):Array
+				{
+					var r:Number = 0;
+					var g:Number = 0;
+					var b:Number = 0;
+					
+					if (S == 0) {
+						r = B;
+						g = r;
+						b = r;
+					} else {
+						var h:Number = (H - Math.floor(hue)) * 6.0;
+						var f:Number =  h - Math.floor(h);
+					
+						var p:Number = B * (1.0 - S);
+						var q:Number = B * (1.0 - S * f);
+						var t:Number = B * (1.0 - (S * (1.0 - f)));
+					
+						switch(Math.floor(h)) {
+							case 0:
+								r = B; g = t; b = p;
+								break;
+							case 1:
+								r = q; g = B; b = p;
+								break;
+							case 2:
+								r = p; g = B; b = t;
+								break;
+							case 3:
+								r = p; g = q; b = B;
+								break;
+							case 4:
+								r = t; g = p; b = B;
+								break;
+							case 5:
+								r = B; g = p; b = q;
+								break;
+						}
+					}
+				    return [r,g,b];
+				}
+				
+				private function RGB2HSL(r:Number, g:Number, b:Number):Array
+				{
+					var H:Number;
+					var S:Number;
+					var B:Number;
+					
+					var cmax:Number = (r > g) ? r : g;
+					if (b > cmax) {
+						cmax = b;
+					}
+					var cmin:Number = (r < g) ? r : g;
+					if (b < cmin) {
+						cmin = b;
+					}
+					B = cmax;
+					if (cmax != 0) {
+						S = (cmax - cmin)/cmax;
+					} else {
+						S = 0;
+					}
+					if (S == 0) {
+						H = 0;
+					} else {
+						var redc:Number   = (cmax - r)/(cmax - cmin);
+						var greenc:Number = (cmax - g)/(cmax - cmin);
+						var bluec:Number  = (cmax - b)/(cmax - cmin);
+						if (r == cmax) {
+							H = bluec - greenc;
+						} else if (g == cmax) {
+							H = 2.0 + redc - bluec;
+						} else {
+							H = 4.0 + greenc - redc;
+						}
+						H = H / 6.0;
+						if (H < 0) {
+							H = H + 1.0;
+						}
+					}
+					return [ H, S, B ];
+				}				
+				
+				private function initImagePicker():void {
+					
+	            	colorArea = new Sprite();
+
+	            	var w:Number = CanvasPicker.width;
+	            	var h:Number = CanvasPicker.height;
+
+					colorArea.graphics.beginFill(0xFF0000);
+					colorArea.graphics.drawRect(0, 0, w, h);
+	            	CanvasPicker.addChild(colorArea);
+
+	            	var whiteArea:Sprite = new Sprite();
+					var matrix:Matrix = new Matrix();
+					matrix.createGradientBox(w, h, 0, 0, 0);
+					whiteArea.graphics.beginGradientFill(GradientType.LINEAR, [0xFFFFFF, 0x000000], [1, 1], [0, 255], matrix);
+					whiteArea.graphics.drawRect(0, 0, w, h);
+					whiteArea.blendMode = "screen";
+	            	CanvasPicker.addChild(whiteArea);
+
+	            	var blackArea:Sprite = new Sprite();
+					matrix.createGradientBox(w, h, Math.PI/2, 0, 0);
+					blackArea.graphics.beginGradientFill(GradientType.LINEAR, [0xFFFFFF, 0x000000], [1, 1], [0, 255], matrix);
+					blackArea.graphics.drawRect(0, 0, w, h);
+					blackArea.blendMode = "multiply";
+	            	CanvasPicker.addChild(blackArea);
+	            	
+	            	handlePicker = new Sprite();
+	            	handlePicker.graphics.lineStyle(2,0x000000,1);
+	            	handlePicker.graphics.drawCircle(0,0,4.5);
+	            	handlePicker.graphics.endFill();
+	            	handlePicker.graphics.lineStyle(1,0xFFFFFF,1);
+	            	handlePicker.graphics.drawCircle(0,0,4);
+	            	CanvasPicker.addChild(handlePicker);
+				}
+
+	            private function initImageHue():void {
+
+	            	var hueBitmap:BitmapData = new BitmapData(26,256,false);
+	            	for ( var y:int=0; y<=256; y++) {
+	            		var hsl:Array = HSB2RGB((1/256)*y,1,1);
+	            		hueBitmap.fillRect(new Rectangle(0,y,32,1), (uint(hsl[0]*255)<<16)|
+	            													(uint(hsl[1]*255)<< 8)|
+	            													(uint(hsl[2]*255)    ));
+	            	}
+	            	var hueArea:Bitmap = new Bitmap(hueBitmap);
+	            	hueArea.x = 5;
+	            	CanvasHue.addChild(hueArea);
+	            	
+	            	handleLeft = new Sprite();
+	            	handleLeft.graphics.beginFill(0x000000);
+	            	handleLeft.graphics.moveTo(-1,-6);
+	            	handleLeft.graphics.lineTo( 7, 0);
+	            	handleLeft.graphics.lineTo(-1, 6);
+	            	handleLeft.graphics.endFill();
+	            	handleLeft.graphics.beginFill(0xFFFFFF);
+	            	handleLeft.graphics.moveTo( 0,-4);
+	            	handleLeft.graphics.lineTo( 5, 0);
+	            	handleLeft.graphics.lineTo( 0, 4);
+	            	handleLeft.graphics.endFill();
+	            	handleLeft.x = 1;
+	            	handleLeft.y = 0;
+	            	CanvasHue.addChild(handleLeft);
+
+	            	handleRight = new Sprite();
+	            	handleRight.graphics.beginFill(0x000000);
+	            	handleRight.graphics.moveTo( 4,-6);
+	            	handleRight.graphics.lineTo(-4, 0);
+	            	handleRight.graphics.lineTo( 4, 6);
+	            	handleRight.graphics.endFill();
+	            	handleRight.graphics.beginFill(0xFFFFFF);
+	            	handleRight.graphics.moveTo( 3,-4);
+	            	handleRight.graphics.lineTo(-2, 0);
+	            	handleRight.graphics.lineTo( 3, 4);
+	            	handleRight.graphics.endFill();
+	            	handleRight.x = 28+5;
+	            	handleRight.y = 0;
+	            	CanvasHue.addChild(handleRight);
+	            }
+	            
+	            private function initImageColor():void {
+	            	colorPreview = new Sprite();
+	            	colorPreview.graphics.lineStyle(1,0x000000);
+	            	colorPreview.graphics.beginFill(0xFFFFFF);
+	            	colorPreview.graphics.drawRect(0,0,64,84);
+	            	CanvasColor.addChild(colorPreview);
+	            }
+				
+	            private function initColorPicker():void {
+
+					PopUpManager.centerPopUp(this);
+	            	
+	            	initImagePicker();
+	            	initImageHue();
+	            	initImageColor();
+
+					var hsb:Array = RGB2HSL(red, green, blue);
+					hue = hsb[0];
+					saturation = hsb[1];
+					lightness = hsb[2];
+	            	
+	            	updateImagePickerColor();
+	            	updateImagePickerHue();
+	            	updateImagePicker();
+	            	
+	            	updateRGBValues();
+	            	updateHSLValues();
+	            	updateHexValue();
+	            	updateColorPreview();
+            	}         
+
+            	private function doHueDown(event:MouseEvent):void {
+					currentDragger = CanvasHue;
+					doHueMove(event);
+				}
+
+            	private function doHueUp(event:MouseEvent):void {
+					currentDragger = undefined;
+					doHueMove(event);
+				}
+
+            	private function doHueMove(event:MouseEvent):void {
+            		if ( event.buttonDown && currentDragger == CanvasHue ) {
+            			var h:Number = Math.max(Math.min(255,CanvasHue.mouseY),0);
+	            		handleLeft.y = h;
+	            		handleRight.y = h;
+	            		hue = h*(1/255);
+	            		var rgb:Array = HSB2RGB(hue, saturation, lightness);
+	            		red = rgb[0];
+	            		green = rgb[1];
+	            		blue = rgb[2];
+		            	updateImagePickerColor();
+		            	updateImagePicker();
+		            	updateRGBValues();
+		            	updateHSLValues();
+		            	updateHexValue();
+		            	updateColorPreview();
+		            	event.updateAfterEvent();
+	            	}
+            	}                                                   
+
+            	private function doPickerDown(event:MouseEvent):void {
+					currentDragger = CanvasPicker;
+					doPickerMove(event);
+				}
+
+            	private function doPickerUp(event:MouseEvent):void {
+					currentDragger = undefined;
+					doPickerMove(event);
+				}
+
+            	private function doPickerMove(event:MouseEvent):void {
+            		if ( event.buttonDown && currentDragger == CanvasPicker ) {
+						var xx:Number = Math.max(Math.min(255,CanvasPicker.mouseX),0);
+						var yy:Number = Math.max(Math.min(255,CanvasPicker.mouseY),0);
+						handlePicker.x = xx;
+						handlePicker.y = yy;
+            			saturation = xx / 255;
+            			lightness = 1 - (yy / 255);
+	            		var rgb:Array = HSB2RGB(hue, saturation, lightness);
+	            		red = rgb[0];
+	            		green = rgb[1];
+	            		blue = rgb[2];
+		            	updateImagePickerColor();
+		            	updateImagePickerHue();
+		            	updateRGBValues();
+		            	updateHSLValues();
+		            	updateHexValue();
+		            	updateColorPreview();
+		            	event.updateAfterEvent();
+            		}
+            	}
+            	
+            	private function correctValue(event:FocusEvent):void {
+            		var n:Number = parseInt(event.target.text, 10);
+            		var v:Boolean = false;
+					if ( event.target == ValueHue.text ) {
+						v = !isNaN(n) && n <= 360 && n >= 0;
+					} else if ( event.target == ValueSaturation.text || 
+								event.target == ValueBrightness.text ) {
+						v = !isNaN(n) && n <= 100 && n >= 0;
+					} else {
+						v = !isNaN(n) && n <= 255 && n >= 0;
+					}
+					if( !v ) {
+						event.target.text = "0";
+						event.target.scrollH = 0;
+						var doRGB:Boolean = true;
+						if ( event.target == ValueRed.text ) {
+							red = 0;
+						} else if ( event.target == ValueGreen.text ) {
+							green = 0;
+						} else if ( event.target == ValueBlue.text ) {
+							blue = 0;
+						} else if ( event.target == ValueSaturation.text ) {
+							saturation = 0;
+							doRGB = false;
+						} else if ( event.target == ValueBrightness.text ) {
+							lightness = 0;
+							doRGB = false;
+						} else if ( event.target == ValueHue.text ) {
+							hue = 0;
+							doRGB = false;
+						}
+						if ( doRGB ) {
+							var hsb:Array = RGB2HSL(red, green, blue);
+							hue = hsb[0];
+							saturation = hsb[1];
+							lightness = hsb[2];
+			            	updateHSLValues();
+						} else {
+							var rgb:Array = HSB2RGB(hue, saturation, lightness);
+							red = rgb[0];
+							green = rgb[1];
+							blue = rgb[2];
+			            	updateRGBValues();
+						}
+		            	updateImagePickerColor();
+		            	updateImagePickerHue();
+		            	updateImagePicker();
+		            	updateHexValue();
+	    	        	updateColorPreview();
+		            }
+            	}
+
+            	private function validateValue(event:KeyboardEvent):void {
+            		var n:Number = parseInt(event.target.text, 10);
+            		var v:Boolean = false;
+					if ( event.target == ValueHue.text ) {
+						v = !isNaN(n) && n <= 360 && n >= 0;
+					} else if ( event.target == ValueSaturation.text || 
+								event.target == ValueBrightness.text ) {
+						v = !isNaN(n) && n <= 100 && n >= 0;
+					} else {
+						v = !isNaN(n) && n <= 255 && n >= 0;
+					}
+					if( v ) {
+						var doRGB:Boolean = true;
+						if ( event.target == ValueRed.text ) {
+							red = n/255;
+						} else if ( event.target == ValueGreen.text ) {
+							green = n/255;
+						} else if ( event.target == ValueBlue.text ) {
+							blue = n/255;
+						} else if ( event.target == ValueSaturation.text ) {
+							saturation = n/100;
+							doRGB = false;
+						} else if ( event.target == ValueBrightness.text ) {
+							lightness = n/100;
+							doRGB = false;
+						} else if ( event.target == ValueHue.text ) {
+							hue = n/360;
+							doRGB = false;
+						}
+						if ( doRGB ) {
+							var hsb:Array = RGB2HSL(red, green, blue);
+							hue = hsb[0];
+							saturation = hsb[1];
+							lightness = hsb[2];
+			            	updateHSLValues();
+						} else {
+							var rgb:Array = HSB2RGB(hue, saturation, lightness);
+							red = rgb[0];
+							green = rgb[1];
+							blue = rgb[2];
+			            	updateRGBValues();
+						}
+		            	updateImagePickerColor();
+		            	updateImagePickerHue();
+		            	updateImagePicker();
+		            	updateHexValue();
+		            	updateColorPreview();
+		            }
+            	}
+
+				public function setColorRGB(color:uint):void {
+					ored = red = ((color>>16)&0xFF)/255;
+					ogreen = green = ((color>>8)&0xFF)/255;
+					oblue = blue = ((color)&0xFF)/255;
+					var hsb:Array = RGB2HSL(red, green, blue);
+					hue = hsb[0];
+					saturation = hsb[1];
+					lightness = hsb[2];
+					if ( colorArea ) {
+		            	updateRGBValues();
+		            	updateHSLValues();
+		            	updateImagePickerColor();
+		            	updateImagePickerHue();
+		            	updateImagePicker();
+		            	updateHexValue();
+		   			}
+				}
+				
+				public function getColorRGB():uint {
+					return 	uint((Math.round(red*255))<<16) | 
+						 	uint((Math.round(green*255))<<8) | 
+						 	uint(Math.round(blue*255))
+				}
+        ]]>
+    </mx:Script>    
+</mx:TitleWindow>

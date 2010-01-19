@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" alpha="1.0">
+	<mx:Image id="iconSound" source="{muteClass}" 
+				width="15" height="15" />
+
+		
+    <mx:Script>
+        <![CDATA[
+        [Bindable]
+ 		[Embed(source="asserts/volume_unmute.png")]
+		public var unMutelass:Class;
+ 		
+ 		[Bindable]
+ 		[Embed(source="asserts/volume_mute.png")]
+		public var muteClass:Class;
+		
+        ]]>
+    </mx:Script>
+</mx:HBox>

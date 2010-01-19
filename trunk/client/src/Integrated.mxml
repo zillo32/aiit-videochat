@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical" 
+	xmlns:room="jp.ac.aiit.syms.room.view.*"
+	xmlns:chat="jp.ac.aiit.syms.chat.view.*" 
+	xmlns:video="jp.ac.aiit.syms.video.view.*"
+	creationComplete="facade.startup( this )"
+	preloader="jp.ac.aiit.syms.preload.CustomPreloader"
+	backgroundColor="#ffffff">
+	<!--
+		起動時スプラッシュ画像を表示する場合は上記タグに以下を指定する
+		preloader="jp.ac.aiit.syms.preload.CustomPreloader"
+	 -->
+	
+
+	<!-- ==================== -->
+	<!-- スタイルシートの設定 -->
+	<!-- ==================== -->
+
+	<mx:Style source="style.css" />
+
+	
+	<!-- ==================== -->
+	<!-- 初期処理用スクリプト -->
+	<!-- ==================== -->
+
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.List;
+			import mx.collections.ArrayCollection;
+			import jp.ac.aiit.syms.room.model.User;
+			import jp.ac.aiit.syms.ApplicationFacade;
+			
+			private var facade:ApplicationFacade = ApplicationFacade.getInstance();	
+			
+			public var me:User;
+			public var room:String;
+			public var roomId:String;
+			public var users:Array;
+			public var userNames:Array;
+			public var walkinNewRoom:String;
+			// マイミクリスト情報
+			public var friendsList:Array;
+
+		]]>
+	</mx:Script>
+
+	
+	<!-- ============================================ -->
+	<!-- ユーザーインターフェースコンポーネントの配置 -->
+	<!-- ============================================ -->
+
+	<mx:HDividedBox width="100%" height="100%" horizontalGap="4" >
+
+		<!-- レイアウト左側 -->
+		<mx:VDividedBox id="vDivide1" height="100%" width="70%">
+
+			<!-- ビデオ領域 -->
+			<video:VideoWindowContainer height="30%" id="videowindow">
+			</video:VideoWindowContainer>
+
+			<!-- チャット領域 -->
+			<chat:ConversationWindow id="conversation">
+			</chat:ConversationWindow>
+
+		</mx:VDividedBox>
+
+		<!-- レイアウト右側 -->
+		<mx:VDividedBox  id="vDivide2" height="100%" width="30%" >
+
+			<!-- 部屋一覧領域 -->
+			<room:RoomInfo id="roomInfo">
+			</room:RoomInfo>
+
+		</mx:VDividedBox>
+
+	</mx:HDividedBox>
+	
+</mx:Application>

@@ -1,0 +1,8 @@
+application: koyama0612
+version: current
+runtime: python
+api_version: 1
+
+handlers:
+- url: /.*
+  script: aiitchat.py

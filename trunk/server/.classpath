@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="WEB-INF/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="WEB-INF/lib"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/slf4j-api-1.4.3.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/spring-core-2.0.8.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/Administrator/My Documents/ダウンロード/red5-0.8.0/red5.jar" sourcepath="C:/_dev/repos/red5-0_7_0/src"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/commons-httpclient-3.1.jar"/>
+	<classpathentry kind="output" path="WEB-INF/classes"/>
+</classpath>

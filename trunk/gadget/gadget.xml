@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+
+  <ModulePrefs title="ビデオチャットmixiアプリ">
+    <Require feature="opensocial-0.8" />
+    <Require feature="dynamic-height"/>
+    <Require feature="flash" />
+    <Require feature="tabs" />
+  </ModulePrefs>
+
+  <Content type="html" view="canvas">
+
+<!-- /// JavaScriptライブラリの読み込み /// -->
+<![CDATA[
+<script src="http://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    // include prototype.js
+    google.load("prototype", "1.6.0.3");
+    // include scriptaculous.js
+    google.load("scriptaculous", "1.8.1");
+    // include SWFObject.js
+    google.load("swfobject", "2.1");
+</script>
+
+
+<!-- /// HTMLの定義 /// -->
+<div id="tabs"></div>
+
+<div id="top">
+</div>
+
+<!-- /// ニュース /// -->
+<div id="news">
+	News!
+</div>
+
+<!-- /// ヘルプ /// -->
+<div id="help">
+	Help.
+</div>
+
+<!-- /// メイン /// -->
+<div id="aiit_header" style="height:60px; padding-bottom:0px; ">
+  <div id="buttons" style="float:left; padding-top:8px;">
+    <a href="javascript:void(0);" id="invitation">
+      <img border="0" height="42" width="170" alt="マイミクシィを招待しよう！" src="http://PATH_TO_YOUR_HOST/request_share_app.png"/>
+    </a>
+  </div>
+  <div id="banner">
+    <a href="http://aiit.ac.jp/" target="_blank">
+      <img border="0" align="right" height="50" width="180" alt="産業技術大学院大学" src="http://PATH_TO_YOUR_HOST/banner.gif"/>
+    </a>
+  </div>
+</div>
+
+<div id="movie_container" style="clear:both">
+  <div id="movie"></div>
+</div>
+
+
+
+<!-- /// 広告用テストタグ /// -->
+
+
+<script type="text/javascript">/*<!--[*/
+/*
+(function(){
+    var src    = "http://mixi.jp/ad_application_program_invoker.pl";
+    var query  = "appli_id=1937&amp;ad_id=DUMMY_AD_ID";
+    document.writeln(['<scri','pt src="',src,'?',query,'&ts=',(new Date).getTime(),'">','</scri','pt>'].join(''));
+})();
+*/
+--></script>
+
+
+<!-- /// JavaScript /// -->
+
+<script type="text/javascript">
+
+	/////////////////////////////////////////////////////
+	// Variables Definition for Flex
+	/////////////////////////////////////////////////////
+
+    // グローバル変数名前空間：AIIT
+    AIIT = {};
+
+    // ユーザー情報格納変数
+    AIIT.user_result = Object();
+    // コミュニティリスト格納変数
+    AIIT.communities_result = Array();
+    // マイミクリスト格納変数
+    AIIT.friends_result = Array();
+
+    // アプリケーション環境格納変数
+    AIIT.app_environment = 'development';
+
+    // アプリケーション全体高さ設定
+    AIIT.app_height = 700;
+    // うち、SWF部の高さ設定
+    AIIT.app_height_swf = 600;
+
+    // マイミク招待ウィンドウ表示時に下げる高さ
+    AIIT.app_top_margin_on_invite = 600;
+
+	// コミュニティ取得リクエスト上限突破ラッパー
+	AIIT.newFetchCommunityRequest=function(A,C){
+		var B="/social/data/groups/"+AIIT.translateIdSpec(A)+"?format=json&count=1000";
+		return new RestfulRequestItem(B,"GET",null,function(E){
+			var F=E.entry;
+			var G=[];
+			for(var D=0;D<F.length;D++){
+				G.push(new mixi.Community(F[D]))
+			}
+			return new opensocial.Collection(G,0,1000)
+		})
+	};
+
+	AIIT.translateIdSpec=function(A){
+		if(A instanceof String||typeof A=="string"){
+			A=AIIT.makeIdSpec(A)
+		}
+		var D=A.getField("userId");
+		var C=A.getField("groupId");
+		if(D=="OWNER"){
+			D="@owner"
+		}else{
+			if(D=="VIEWER"){
+				D="@viewer"
+			}
+			else{
+				if(opensocial.Container.isArray(A)){
+					for(var B=0;B<A.length;B++){}
+				}
+			}
+		}
+		if(C=="FRIENDS"){
+			C="@friends"
+		}else
+		{
+			if(C=="SELF"||!C){
+				C="@self"
+			}
+		}
+		return D+"/"+C;
+	};
+
+	AIIT.makeIdSpec=function(D){
+		var C=D.split("_");
+		var A=C[0];
+		var B="SELF";
+		if(C.length>0){
+			B=C[1]
+		}
+		return new opensocial.IdSpec({userId:A,groupId:B})
+	};
+
+	/////////////////////////////////////////////////////
+	// Enbed Flash Object
+	/////////////////////////////////////////////////////
+
+    gadgets.window.adjustHeight( AIIT.app_height ) ;
+    
+    gadgets.util.registerOnLoadHandler( function() {
+    	
+    	// タブの生成
+    	_createTabs();
+    
+        // リクエストのコンテナを作成
+        req = opensocial.newDataRequest();
+
+        // 閲覧ユーザ
+        req.add(req.newFetchPersonRequest(opensocial.IdSpec.PersonId.VIEWER), "viewer");
+        // 閲覧ユーザのコミュニティ
+        req.add(AIIT.newFetchCommunityRequest(opensocial.IdSpec.PersonId.VIEWER), "viewerCommunities");
+        // 閲覧ユーザのマイミク
+        var friends_param = {};
+        friends_param[opensocial.IdSpec.Field.USER_ID]  = opensocial.IdSpec.PersonId.VIEWER;
+        friends_param[opensocial.IdSpec.Field.GROUP_ID] = "FRIENDS";
+        var fetch_options = {};
+        fetch_options[opensocial.DataRequest.PeopleRequestFields.MAX ] = 1000;
+        req.add( req.newFetchPeopleRequest( opensocial.newIdSpec(friends_param), fetch_options ), "viewerFriends");
+
+        req.send( function(resp) {
+
+	        // ユーザー情報取得
+            var viewer = resp.get("viewer").getData();
+            var user_id = viewer.getField(opensocial.Person.Field.ID);
+            var user_name = viewer.getField(opensocial.Person.Field.NICKNAME, {"escapeType": opensocial.EscapeType.NONE});
+            var user_icon = viewer.getField(opensocial.Person.Field.THUMBNAIL_URL);
+
+            AIIT.user_result = {'userId': user_id, 'userName':user_name ,'userIcon':user_icon };
+
+	        // コミュニティリスト情報取得
+	        var comm_items = resp.get("viewerCommunities");
+	        if (comm_items.hadError()) { alert("Error: when get communities data." + comm_items.getError()); return; }
+	        var communities = comm_items.getData();
+	        communities.each( function (community) {
+	            var comm_id   = community.getId().replace(/^.+\/(.+)$/,"$1");
+	            var comm_name = community.getName();
+	            var comm_icon = community.getField(mixi.Community.Field.THUMBNAIL_URL);
+	            AIIT.communities_result.push( {'roomId': comm_id, 'roomName': comm_name, 'roomIcon': comm_icon} );
+	        });
+
+	        // マイミクリスト情報取得
+	        var friend_items = resp.get("viewerFriends");
+	        if (friend_items.hadError()) { alert("Error: when get friends data." + friend_items.getError()); return; }
+	        var friends = friend_items.getData();
+	        friends.each( function (friend) {
+	            var friend_id = friend.getField(opensocial.Person.Field.ID);
+	            var friend_name = friend.getField(opensocial.Person.Field.NICKNAME, {"escapeType": opensocial.EscapeType.NONE});
+	            var friend_icon = friend.getField(opensocial.Person.Field.THUMBNAIL_URL);
+	            AIIT.friends_result.push( {'userId': friend_id, 'userName':friend_name ,'userIcon':friend_icon } );
+	        });
+
+	        // Enbed Flash Object
+	        _enbedFlashObject();
+
+			// 友達に紹介するボタンへのイベントハンドラ登録
+	        _addEventInvitation();
+
+        });
+    });
+
+    /**
+     * Flashオブジェクトを表示する
+     * registerOnLoadHandlerから呼び出し
+     */
+    function _enbedFlashObject(){
+        // SWFObject ===>
+        //var uri = gadgets.io.getProxyUrl("http://PATH_TO_YOUR_HOST/Integrated.swf");
+        var uri = "http://PATH_TO_YOUR_HOST/Integrated.swf";
+        var flashvars = {
+        };
+        var params = {
+          menu: "false",
+// [20090718 yoshida] wmodeは日本語入力が出来なくなるので指定禁止
+//          wmode: "transparent",
+          allowscriptaccess: "always",
+          allownetworking: "all",
+          allowfullscreen: "true"
+        };
+        var attributes = {
+          id: "video_swf_id",
+          name: "video_swf_id"
+        };
+
+//        swfobject.embedSWF( uri, "movie", "690", AIIT.app_height_swf, "9.0.0",
+        swfobject.embedSWF( uri, "movie", "100%", AIIT.app_height_swf, "9.0.0",
+                            "expressInstall.swf", flashvars, params, attributes );
+        // <=== SWFObject
+    }
+
+
+    /**
+     * 友達に紹介するボタンへのイベントハンドラ
+     * registerOnLoadHandlerから呼び出し
+     */
+    function _addEventInvitation(){
+		$('invitation').observe(
+		  'click', 
+		  function(evt) {
+		    // swfの位置を下に移動する
+		    $('movie_container').style.paddingTop = AIIT.app_top_margin_on_invite;
+	        gadgets.window.adjustHeight( AIIT.app_height + AIIT.app_top_margin_on_invite ) ;
+
+		    // 紹介用API呼び出し
+		    opensocial.requestShareApp(
+		        opensocial.IdSpec.PersonId.VIEWER, 
+		        null, 
+		        function(response){
+		            // swfの位置を元に戻す
+		            $('movie_container').style.paddingTop = 0;
+		            gadgets.window.adjustHeight( AIIT.app_height ) ;
+		        }
+		    );
+		  }
+		);
+    }
+
+
+    /**
+     * タブの生成
+     * registerOnLoadHandlerから呼び出し
+     */
+    function _createTabs(){
+		var tabs = new gadgets.TabSet(__MODULE_ID__, null, $( 'tabs' ));
+
+		// top
+		var _top = {
+		  contentContainer: $('top'),
+		  callback: function() {
+		    // do something...
+		  }
+		};
+		tabs.addTab("トップ", _top);
+
+		// news
+		var _news = {
+		  contentContainer: $('news'),
+		  callback: function() {
+		    // do something...
+		  }
+		};
+		tabs.addTab("ニュース", _news);
+
+		// help
+		var _help = {
+		  contentContainer: $('help'),
+		  callback: function() {
+		    // do something...
+		  }
+		};
+		tabs.addTab("ヘルプ", _help);
+
+
+    }
+
+
+    /**
+     * ソーシャルユーザ情報取得インターフェイス
+     * ExternalInterfaceから呼び出し
+     */
+    function getSocialUser(){
+        return AIIT.user_result;
+    }
+
+    /**
+     * コミュニティリスト情報取得インターフェイス
+     * ExternalInterfaceから呼び出し
+     */
+    function getCommunityList(){
+        return AIIT.communities_result;
+    }
+
+    /**
+     * マイミクリスト情報取得インターフェイス
+     * ExternalInterfaceから呼び出し
+     */
+    function getFriendList(){
+        return AIIT.friends_result;
+    }
+
+    /**
+     * アプリケーション環境情報取得インターフェイス
+     * ExternalInterfaceから呼び出し
+     * 
+     * 返り値:String
+     *   'development'：開発版
+     *   'openbeta'：オープンβ版
+     */
+    function getApplicationEnvironment(){
+        return AIIT.app_environment;
+    }
+
+</script>
+
+
+]]>
+  </Content>
+  
+  
+  <Content type="html" view="home">
+<![CDATA[
+<script type="text/javascript">gadgets.window.adjustHeight(138);</script>
+<div align="center" style="margin:auto">
+  <a target="_top" href="http://mixi.jp/view_appli.pl?id=1937">
+    <img border="0" height="128" width="128" alt="ビデオチャット" src="http://PATH_TO_YOUR_HOST/logo.gif"/>
+  </a>
+</div>
+]]>
+  </Content>
+  
+  
+  <Content type="html" view="profile">
+<![CDATA[
+<script type="text/javascript">gadgets.window.adjustHeight(138);</script>
+<div align="center" style="margin:auto">
+  <a target="_top" href="http://mixi.jp/view_appli.pl?id=1937">
+    <img border="0" height="128" width="128" alt="ビデオチャット" src="http://PATH_TO_YOUR_HOST/logo.gif"/>
+  </a>
+</div>
+]]>
+  </Content>
+  
+</Module>
