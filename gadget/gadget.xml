@@ -43,12 +43,12 @@
 <div id="aiit_header" style="height:60px; padding-bottom:0px; ">
   <div id="buttons" style="float:left; padding-top:8px;">
     <a href="javascript:void(0);" id="invitation">
-      <img border="0" height="42" width="170" alt="マイミクシィを招待しよう！" src="http://PATH_TO_YOUR_HOST/request_share_app.png"/>
+      <img border="0" height="42" width="170" alt="マイミクシィを招待しよう！" src="http://ns1.syms.aiit.ac.jp/request_share_app.png"/>
     </a>
   </div>
   <div id="banner">
     <a href="http://aiit.ac.jp/" target="_blank">
-      <img border="0" align="right" height="50" width="180" alt="産業技術大学院大学" src="http://PATH_TO_YOUR_HOST/banner.gif"/>
+      <img border="0" align="right" height="50" width="180" alt="産業技術大学院大学" src="http://ns1.syms.aiit.ac.jp/banner.gif"/>
     </a>
   </div>
 </div>
@@ -58,9 +58,7 @@
 </div>
 
 
-
 <!-- /// 広告用テストタグ /// -->
-
 
 <script type="text/javascript">/*<!--[*/
 /*
@@ -102,6 +100,7 @@
     // マイミク招待ウィンドウ表示時に下げる高さ
     AIIT.app_top_margin_on_invite = 600;
 
+/*
 	// コミュニティ取得リクエスト上限突破ラッパー
 	AIIT.newFetchCommunityRequest=function(A,C){
 		var B="/social/data/groups/"+AIIT.translateIdSpec(A)+"?format=json&count=1000";
@@ -153,6 +152,7 @@
 		}
 		return new opensocial.IdSpec({userId:A,groupId:B})
 	};
+*/
 
 	/////////////////////////////////////////////////////
 	// Enbed Flash Object
@@ -171,7 +171,9 @@
         // 閲覧ユーザ
         req.add(req.newFetchPersonRequest(opensocial.IdSpec.PersonId.VIEWER), "viewer");
         // 閲覧ユーザのコミュニティ
-        req.add(AIIT.newFetchCommunityRequest(opensocial.IdSpec.PersonId.VIEWER), "viewerCommunities");
+        var communities_fetch_options = {};
+        communities_fetch_options[opensocial.DataRequest.PeopleRequestFields.MAX ] = 1000;
+        req.add(mixi.newFetchCommunityRequest(opensocial.IdSpec.PersonId.VIEWER, communities_fetch_options ), "viewerCommunities");
         // 閲覧ユーザのマイミク
         var friends_param = {};
         friends_param[opensocial.IdSpec.Field.USER_ID]  = opensocial.IdSpec.PersonId.VIEWER;
@@ -227,8 +229,8 @@
      */
     function _enbedFlashObject(){
         // SWFObject ===>
-        //var uri = gadgets.io.getProxyUrl("http://PATH_TO_YOUR_HOST/Integrated.swf");
-        var uri = "http://PATH_TO_YOUR_HOST/Integrated.swf";
+        //var uri = gadgets.io.getProxyUrl("http://ns1.syms.aiit.ac.jp/Integrated.swf");
+        var uri = "http://ns1.syms.aiit.ac.jp/Integrated.swf";
         var flashvars = {
         };
         var params = {
@@ -364,7 +366,7 @@
 <script type="text/javascript">gadgets.window.adjustHeight(138);</script>
 <div align="center" style="margin:auto">
   <a target="_top" href="http://mixi.jp/view_appli.pl?id=1937">
-    <img border="0" height="128" width="128" alt="ビデオチャット" src="http://PATH_TO_YOUR_HOST/logo.gif"/>
+    <img border="0" height="128" width="128" alt="ビデオチャット" src="http://ns1.syms.aiit.ac.jp/logo.gif"/>
   </a>
 </div>
 ]]>
@@ -376,7 +378,7 @@
 <script type="text/javascript">gadgets.window.adjustHeight(138);</script>
 <div align="center" style="margin:auto">
   <a target="_top" href="http://mixi.jp/view_appli.pl?id=1937">
-    <img border="0" height="128" width="128" alt="ビデオチャット" src="http://PATH_TO_YOUR_HOST/logo.gif"/>
+    <img border="0" height="128" width="128" alt="ビデオチャット" src="http://ns1.syms.aiit.ac.jp/logo.gif"/>
   </a>
 </div>
 ]]>
